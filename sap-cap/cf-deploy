@@ -1,0 +1,78 @@
+#!/usr/bin/env node
+const { spawnSync } = require('child_process');
+
+// COLOR CODES
+const color = {
+  reset: "\x1b[0m",
+  blue: "\x1b[34m",
+  gray: "\x1b[90m",
+  green: "\x1b[32m",
+  red: "\x1b[31m",
+  magenta: "\x1b[35m",
+};
+
+const supportsColor = process.stdout.isTTY;
+
+function printSectionTitle(text) {
+  console.log(supportsColor ? `${color.magenta}${text}${color.reset}` : text);
+  console.log('='.repeat(40));
+}
+
+function runCommand(command, label) {
+  console.log('\n' + (supportsColor ? `${color.blue}==> ${label}${color.reset}` : `==> ${label}`));
+  console.log(supportsColor ? `${color.gray}${command}${color.reset}` : command);
+
+  const result = spawnSync(command, {
+    shell: true,
+    stdio: 'inherit',
+    env: {
+      ...process.env,
+      FORCE_COLOR: '1', // encourage cf/mbt to output with color
+    },
+  });
+
+  if (result.status !== 0) {
+    console.error(supportsColor
+      ? `${color.red}\n✖ ${label} failed.${color.reset}`
+      : `\n✖ ${label} failed.`);
+    return false;
+  }
+
+  console.log(supportsColor
+    ? `${color.green}\n✔ ${label} completed successfully.${color.reset}`
+    : `\n✔ ${label} completed successfully.`);
+  return true;
+}
+
+// Plays a bell sound in the terminal
+// Alerts the user that the script has finished running
+// Note: This may not work in all terminal environments
+function terminalBell() {
+  process.stdout.write('\x07');
+}
+
+// SCRIPT START
+printSectionTitle('CAP Application Build & Deploy');
+
+const buildSuccess = runCommand('mbt build -t gen --mtar mta.tar', 'Building the CAP Application');
+
+if (!buildSuccess) {
+  console.log(supportsColor
+    ? `\n${color.red}Aborting deployment due to build failure.${color.reset}`
+    : `\nAborting deployment due to build failure.`);
+  process.exit(1);
+}
+
+const deploySuccess = runCommand('cf deploy gen/mta.tar -f', 'Deploying to Cloud Foundry');
+
+if (deploySuccess) {
+  console.log(supportsColor
+    ? `\n${color.green}✔ All steps completed successfully.${color.reset}`
+    : `\n✔ All steps completed successfully.`);
+} else {
+  console.log(supportsColor
+    ? `\n${color.red}✖ Deployment failed.${color.reset}`
+    : `\n✖ Deployment failed.`);
+}
+
+terminalBell();
