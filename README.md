@@ -1,6 +1,6 @@
-# scripts-and-tools
+# cli-tools
 
-A collection of useful scripts and CLI tools for streamlining SAP CAP and general development workflows. This repository is intended as a personal toolbox to improve productivity, automate common tasks, and ensure consistency across local and deployed environments.
+A collection of useful scripts and CLI tools for streamlining development workflows. This repository is intended as a personal toolbox to improve productivity, automate common tasks, and ensure consistency across local and deployed environments.
 
 ## Contents
 
